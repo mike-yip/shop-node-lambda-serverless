@@ -4,16 +4,25 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs14.x
+  region: us-west-2
+
+plugins:
+  - serverless-webpack
+
+custom:
+    webpack:
+        webpackConfig: ./webpack.config.js
+        includeModules: true # enable auto-packing of external modules
 
 functions:
   getProductsList:
-    handler: api/productService.getProductsList
+    handler: src/services/productsList.getProductsList
     events:
       - httpApi:
           path: /products
           method: get
   getProductsById:
-    handler: api/productService.getProductsById
+    handler: src/services/productsById.getProductsById
     events:
       - httpApi:
           path: /products/{productId}

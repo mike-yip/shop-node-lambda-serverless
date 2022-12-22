@@ -40,19 +40,10 @@ const products = [
   },
 ];
 
-module.exports.getProductsList = async (event) => {
-  return {
-    statusCode: 200,
-    body: JSON.stringify(products),
-  };
+export const getProducts = async () => {
+    return products;
 };
 
-module.exports.getProductsById = async (event) => {
-  const productId = event.pathParameters.productId || null;
-  return {
-    statusCode: 200,
-    body: JSON.stringify(
-      products.find((product) => product.id === productId) || null
-    ),
-  };
+export const getProductById = async (productId) => {
+  return products.find((product) => product.id === productId) || null;
 };
