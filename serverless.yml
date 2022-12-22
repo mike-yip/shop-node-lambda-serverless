@@ -1,0 +1,20 @@
+service: shop-node-lambda-serverless
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+functions:
+  getProductsList:
+    handler: api/productService.getProductsList
+    events:
+      - httpApi:
+          path: /products
+          method: get
+  getProductsById:
+    handler: api/productService.getProductsById
+    events:
+      - httpApi:
+          path: /products/{productId}
+          method: get
