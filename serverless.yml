@@ -23,12 +23,16 @@ provider:
         - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.STOCKS_TABLE_NAME}
 
 plugins:
+  - serverless-middleware
   - serverless-webpack
 
 custom:
     webpack:
         webpackConfig: ./webpack.config.js
         includeModules: true # enable auto-packing of external modules
+    middleware:
+      pos:
+        - src/utils/responseInterceptor.appendCorsHeaders
 
 functions:
   getProductsList:
