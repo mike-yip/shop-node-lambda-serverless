@@ -5,6 +5,22 @@ provider:
   name: aws
   runtime: nodejs14.x
   region: us-west-2
+  environment:
+    PRODUCTS_TABLE_NAME: products
+    STOCKS_TABLE_NAME: stocks
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.PRODUCTS_TABLE_NAME}
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.STOCKS_TABLE_NAME}
 
 plugins:
   - serverless-webpack

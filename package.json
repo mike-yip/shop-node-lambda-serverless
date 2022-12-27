@@ -14,6 +14,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "dependencies": {
+    "aws-sdk": "^2.1282.0",
     "source-map-support": "^0.5.21"
   }
 }

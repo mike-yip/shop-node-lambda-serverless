@@ -3,14 +3,27 @@
 import { getProducts } from "../utils/product";
 
 export const getProductsList = async (event) => {
-  const products = await getProducts();
+  try {
+    const products = await getProducts();
 
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Credentials': true,
-    },
-    body: JSON.stringify(products),
-  };
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify(products),
+    };
+  } catch (e) {
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Credentials": true,
+      },
+      body: JSON.stringify({
+        message: e.message,
+      }),
+    };
+  }
 };
