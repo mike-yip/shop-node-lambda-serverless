@@ -33,6 +33,7 @@ custom:
     middleware:
       pos:
         - src/utils/responseInterceptor.appendCorsHeaders
+        - catch: src/utils/responseInterceptor.errorHandler
 
 functions:
   getProductsList:
