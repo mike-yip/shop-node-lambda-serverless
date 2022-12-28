@@ -12,7 +12,6 @@ export const appendCorsHeaders = async (event, context) => {
 
 export const errorHandler = async (event, context) => {
   const error = context.prev;
-  context.end();
 
   return {
     statusCode: 500,

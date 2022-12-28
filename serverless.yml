@@ -34,8 +34,8 @@ custom:
       pre: 
         - src/utils/requestInterceptor.logRequest
       pos:
-        - src/utils/responseInterceptor.appendCorsHeaders
         - catch: src/utils/responseInterceptor.errorHandler
+        - src/utils/responseInterceptor.appendCorsHeaders
 
 functions:
   getProductsList:
