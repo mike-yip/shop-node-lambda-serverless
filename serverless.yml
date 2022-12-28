@@ -50,3 +50,10 @@ functions:
           path: /products/{productId}
           method: get
           cors: true
+  createProduct:
+    handler: src/services/createProduct.createProductApi
+    events:
+      - httpApi:
+          path: /products
+          method: post
+          cors: true

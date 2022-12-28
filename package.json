@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1282.0",
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "uuid": "^9.0.0"
   }
 }
