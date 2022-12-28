@@ -2,13 +2,22 @@
 
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
-const docClient = new AWS.DynamoDB.DocumentClient();
 
 const getProductsTableName = () => process.env["PRODUCTS_TABLE_NAME"];
 
 const getStocksTableName = () => process.env["STOCKS_TABLE_NAME"];
 
+const getDynamoDBDocumentClient = (() => {
+  let docClient = null;
+  return () => {
+    if (!docClient) docClient = new AWS.DynamoDB.DocumentClient();
+    return docClient;
+  };
+})();
+
 export const getProducts = async () => {
+  const docClient = getDynamoDBDocumentClient();
+
   // get all products
   const productsPromise = docClient
     .scan({
@@ -32,17 +41,21 @@ export const getProducts = async () => {
   const stocksCount = {}; // product_id -> count
 
   (stocksData.Items || []).forEach((stock) => {
-    stocksCount[stock.product_id] = stock.count || 0;
+    stocksCount[stock.product_id] = stock.count;
   });
 
-  const products = (productsData.Items || []).map((product) => {
-    return { ...product, count: stocksCount[product.id] || 0 };
-  });
+  const products = (productsData.Items || [])
+    .filter((product) => stocksCount[product.id] !== undefined)
+    .map((product) => {
+      return { ...product, count: stocksCount[product.id] };
+    });
 
   return products;
 };
 
 export const getProductById = async (productId) => {
+  const docClient = getDynamoDBDocumentClient();
+
   // get all products
   const productPromise = docClient
     .get({
@@ -72,12 +85,13 @@ export const getProductById = async (productId) => {
   const product = productData.Item;
   const stock = stockData.Item;
 
-  return product ? { ...product, count: stock?.count || 0 } : null;
+  return product && stock ? { ...product, count: stock.count } : null;
 };
 
 export const createProduct = async (product) => {
   const uuid = uuidv4();
-  const { title, description, price, count = 0 } = product;
+  const { title, description, price, count } = product;
+  const docClient = getDynamoDBDocumentClient();
 
   const params = {
     TransactItems: [
