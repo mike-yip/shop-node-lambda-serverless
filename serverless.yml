@@ -31,6 +31,8 @@ custom:
         webpackConfig: ./webpack.config.js
         includeModules: true # enable auto-packing of external modules
     middleware:
+      pre: 
+        - src/utils/requestInterceptor.logRequest
       pos:
         - src/utils/responseInterceptor.appendCorsHeaders
         - catch: src/utils/responseInterceptor.errorHandler
