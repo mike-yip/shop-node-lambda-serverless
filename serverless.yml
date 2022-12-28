@@ -21,6 +21,8 @@ provider:
       Resource:
         - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.PRODUCTS_TABLE_NAME}
         - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.STOCKS_TABLE_NAME}
+  httpApi:
+    cors: true
 
 plugins:
   - serverless-middleware
@@ -35,7 +37,6 @@ custom:
         - src/utils/requestInterceptor.logRequest
       pos:
         - catch: src/utils/responseInterceptor.errorHandler
-        - src/utils/responseInterceptor.appendCorsHeaders
 
 functions:
   getProductsList:
@@ -44,18 +45,15 @@ functions:
       - httpApi:
           path: /products
           method: get
-          cors: true
   getProductsById:
     handler: src/services/productsById.getProductsById
     events:
       - httpApi:
           path: /products/{productId}
           method: get
-          cors: true
   createProduct:
     handler: src/services/createProduct.createProductApi
     events:
       - httpApi:
           path: /products
           method: post
-          cors: true
