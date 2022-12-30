@@ -29,10 +29,6 @@ describe("services/productsById.js", () => {
 
     expect(response).toEqual({
       statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-      },
       body: JSON.stringify({
         id: "abc",
       }),
@@ -48,10 +44,6 @@ describe("services/productsById.js", () => {
 
     expect(response).toEqual({
       statusCode: 404,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-      },
       body: JSON.stringify({
         message: "Product not found",
       }),
@@ -67,10 +59,6 @@ describe("services/productsById.js", () => {
 
     expect(response).toEqual({
       statusCode: 404,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Credentials': true,
-      },
       body: JSON.stringify({
         message: "Product not found",
       }),

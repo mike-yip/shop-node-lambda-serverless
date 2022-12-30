@@ -1,49 +1,126 @@
 "use strict";
 
-// mock product data
-const products = [
-  {
-    description: "Short Product Description1",
-    id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
-    price: 24,
-    title: "ProductOne",
-  },
-  {
-    description: "Short Product Description7",
-    id: "7567ec4b-b10c-48c5-9345-fc73c48a80a1",
-    price: 15,
-    title: "ProductTitle",
-  },
-  {
-    description: "Short Product Description2",
-    id: "7567ec4b-b10c-48c5-9345-fc73c48a80a3",
-    price: 23,
-    title: "Product",
-  },
-  {
-    description: "Short Product Description4",
-    id: "7567ec4b-b10c-48c5-9345-fc73348a80a1",
-    price: 15,
-    title: "ProductTest",
-  },
-  {
-    description: "Short Product Descriptio1",
-    id: "7567ec4b-b10c-48c5-9445-fc73c48a80a2",
-    price: 23,
-    title: "Product2",
-  },
-  {
-    description: "Short Product Description7",
-    id: "7567ec4b-b10c-45c5-9345-fc73c48a80a1",
-    price: 15,
-    title: "ProductName",
-  },
-];
+import AWS from "aws-sdk";
+import { v4 as uuidv4 } from "uuid";
+
+const getProductsTableName = () => process.env["PRODUCTS_TABLE_NAME"];
+
+const getStocksTableName = () => process.env["STOCKS_TABLE_NAME"];
+
+const getDynamoDBDocumentClient = (() => {
+  let docClient = null;
+  return () => {
+    if (!docClient) docClient = new AWS.DynamoDB.DocumentClient();
+    return docClient;
+  };
+})();
 
 export const getProducts = async () => {
-    return products;
+  const docClient = getDynamoDBDocumentClient();
+
+  // get all products
+  const productsPromise = docClient
+    .scan({
+      TableName: getProductsTableName(),
+    })
+    .promise();
+
+  // get all stocks
+  const stocksPromise = docClient
+    .scan({
+      TableName: getStocksTableName(),
+    })
+    .promise();
+
+  // wait for all the promises here to make sure run concurrently
+  const [productsData, stocksData] = await Promise.all([
+    productsPromise,
+    stocksPromise,
+  ]);
+
+  const stocksCount = {}; // product_id -> count
+
+  (stocksData.Items || []).forEach((stock) => {
+    stocksCount[stock.product_id] = stock.count;
+  });
+
+  const products = (productsData.Items || [])
+    .filter((product) => stocksCount[product.id] !== undefined)
+    .map((product) => {
+      return { ...product, count: stocksCount[product.id] };
+    });
+
+  return products;
 };
 
 export const getProductById = async (productId) => {
-  return products.find((product) => product.id === productId) || null;
+  const docClient = getDynamoDBDocumentClient();
+
+  // get all products
+  const productPromise = docClient
+    .get({
+      TableName: getProductsTableName(),
+      Key: {
+        id: productId,
+      },
+    })
+    .promise();
+
+  // get all stocks
+  const stockPromise = docClient
+    .get({
+      TableName: getStocksTableName(),
+      Key: {
+        product_id: productId,
+      },
+    })
+    .promise();
+
+  // wait for all the promises here to make sure run concurrently
+  const [productData, stockData] = await Promise.all([
+    productPromise,
+    stockPromise,
+  ]);
+
+  const product = productData.Item;
+  const stock = stockData.Item;
+
+  return product && stock ? { ...product, count: stock.count } : null;
+};
+
+export const createProduct = async (product) => {
+  const uuid = uuidv4();
+  const { title, description, price, count } = product;
+  const docClient = getDynamoDBDocumentClient();
+
+  const params = {
+    TransactItems: [
+      {
+        Put: {
+          TableName: getProductsTableName(),
+          Item: {
+            id: uuid,
+            title: title,
+            description: description,
+            price: price,
+          },
+          ConditionExpression: "attribute_not_exists(id)",
+        },
+      },
+      {
+        Put: {
+          TableName: getStocksTableName(),
+          Item: {
+            product_id: uuid,
+            count: count,
+          },
+          ConditionExpression: "attribute_not_exists(product_id)",
+        },
+      },
+    ],
+  };
+
+  await docClient.transactWrite(params).promise();
+
+  return { ...product, count: count, id: uuid };
 };
