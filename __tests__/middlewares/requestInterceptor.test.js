@@ -1,6 +1,6 @@
 "use strict";
 
-import { logRequest } from "../../src/utils/requestInterceptor";
+import { logRequest } from "../../src/middlewares/requestInterceptor";
 
 describe("utils/requestInterceptor.js", () => {
   test("logRequest", async () => {

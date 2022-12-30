@@ -34,9 +34,9 @@ custom:
         includeModules: true # enable auto-packing of external modules
     middleware:
       pre: 
-        - src/utils/requestInterceptor.logRequest
+        - src/middlewares/requestInterceptor.logRequest
       pos:
-        - catch: src/utils/responseInterceptor.errorHandler
+        - catch: src/middlewares/responseInterceptor.errorHandler
 
 functions:
   getProductsList:
