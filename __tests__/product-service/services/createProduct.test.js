@@ -1,9 +1,9 @@
 "use strict";
 
-import { createProduct } from "../../src/utils/product";
-import { createProductApi } from "../../src/services/createProduct";
+import { createProduct } from "../../../src/product-service/models/product";
+import { createProductApi } from "../../../src/product-service/services/createProduct";
 
-jest.mock("../../src/utils/product", () => {
+jest.mock("../../../src/product-service/models/product", () => {
   return {
     createProduct: jest.fn((obj) => {
       return Promise.resolve(obj);

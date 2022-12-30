@@ -1,6 +1,6 @@
 "use strict";
 
-import { getProducts } from "../utils/product";
+import { getProducts } from "../models/product";
 
 export const getProductsList = async (event) => {
   const products = await getProducts();

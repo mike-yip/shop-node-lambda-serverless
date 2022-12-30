@@ -4,7 +4,7 @@ import {
   getProducts,
   getProductById,
   createProduct,
-} from "../../src/utils/product";
+} from "../../../src/product-service/models/product";
 import AWSMock from "aws-sdk-mock";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";

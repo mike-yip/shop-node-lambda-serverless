@@ -1,6 +1,6 @@
 "use strict";
 
-import { getProductById } from "../utils/product";
+import { getProductById } from "../models/product";
 
 export const getProductsById = async (event) => {
   const productId = event.pathParameters.productId || null;
