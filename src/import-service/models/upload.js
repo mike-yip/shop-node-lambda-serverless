@@ -4,10 +4,14 @@ import AWS from "aws-sdk";
 
 const getUploadBucketName = () => process.env["FILE_UPLOAD_BUCKET_NAME"];
 
+const getUploadBucketSignatureVersion = () =>
+  process.env["FILE_UPLOAD_BUCKET_SIGNATURE_VERSION"];
+
 const getS3Instance = (() => {
   let s3 = null;
   return () => {
-    if (!s3) s3 = new AWS.S3({ signatureVersion: "v4" });
+    if (!s3)
+      s3 = new AWS.S3({ signatureVersion: getUploadBucketSignatureVersion() });
     return s3;
   };
 })();
