@@ -3,7 +3,7 @@
 import { getSignedUrlForUpload, parseUploadedFile } from "../models/upload";
 
 export const importProductsFile = async (event) => {
-  const name = event?.queryStringParameters?.name;
+  const name = event.queryStringParameters.name;
   const signedUrl = await getSignedUrlForUpload(name);
 
   return {
@@ -13,8 +13,8 @@ export const importProductsFile = async (event) => {
 };
 
 export const importFileParser = async (event) => {
-  const key = event?.Records?.[0]?.s3?.object?.key?.replace(/\+/g, ' ');
   try {
+    const key = event.Records[0].s3.object.key.replace(/\+/g, ' ');
     await parseUploadedFile(key);
   }
   catch (e) {
