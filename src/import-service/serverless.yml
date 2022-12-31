@@ -1,0 +1,40 @@
+service: import-service
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-west-2
+  environment:
+    FILE_UPLOAD_BUCKET_NAME: lambda-upload-mike
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+      Resource: arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/uploaded/*
+  httpApi:
+    cors: true
+
+plugins:
+  - serverless-middleware
+  - serverless-webpack
+
+custom:
+    webpack:
+        webpackConfig: ../../webpack.config.js
+        includeModules:
+          packagePath: '../../package.json'
+    middleware:
+      pre: 
+        - ../middlewares/requestInterceptor.logRequest
+      pos:
+        - catch: ../middlewares/responseInterceptor.errorHandler
+
+functions:
+  importProductsFile:
+    handler: services/import.importProductsFile
+    events:
+      - httpApi:
+          path: /import
+          method: get
