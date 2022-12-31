@@ -8,12 +8,13 @@ provider:
   environment:
     FILE_UPLOAD_BUCKET_NAME: lambda-upload-mike
     FILE_UPLOAD_BUCKET_SIGNATURE_VERSION: v4
+    FILE_UPLOAD_BUCKET_PREFIX: uploaded/
   iamRoleStatements:
     - Effect: Allow
       Action:
         - s3:GetObject
         - s3:PutObject
-      Resource: arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/uploaded/*
+      Resource: arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/${self:provider.environment.FILE_UPLOAD_BUCKET_PREFIX}*
   httpApi:
     cors: true
 
@@ -39,3 +40,16 @@ functions:
       - httpApi:
           path: /import
           method: get
+  importFileParser:
+    handler: services/import.importFileParser
+    events:
+      - s3:
+          bucket: ${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: ${self:provider.environment.FILE_UPLOAD_BUCKET_PREFIX}
+            - suffix: .csv
+          existing: true
+    middleware:
+      pre: 
+        - ../middlewares/requestInterceptor.logRequest
