@@ -13,7 +13,7 @@ export const importProductsFile = async (event) => {
 };
 
 export const importFileParser = async (event) => {
-  const key = event?.Records?.[0]?.s3?.object?.key;
+  const key = event?.Records?.[0]?.s3?.object?.key?.replace(/\+/g, ' ');
   try {
     await parseUploadedFile(key);
   }
