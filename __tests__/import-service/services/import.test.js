@@ -3,13 +3,17 @@
 import {
   getSignedUrlForUpload,
   parseUploadedFile,
+  copyUploadedFileToParsed,
+  deleteFile,
 } from "../../../src/import-service/models/upload";
 import {
   importProductsFile,
   importFileParser,
 } from "../../../src/import-service/services/import";
 
-const PARSE_UPLOADED_FILE_ERROR = "Parsing Error";
+const mockParseUploadedError = new Error("Parsing Error");
+const mockCopyUploadedError = new Error("Copying Error");
+const mockDeleteUploadedError = new Error("Deleting Error");
 
 jest.mock("../../../src/import-service/models/upload", () => {
   return {
@@ -20,10 +24,33 @@ jest.mock("../../../src/import-service/models/upload", () => {
     }),
     parseUploadedFile: jest.fn((key) => {
       return new Promise((resolve, reject) => {
+        if (
+          key === "abc" ||
+          key === "ijk xyz  mno" ||
+          key === "copy" ||
+          key === "delete"
+        ) {
+          resolve();
+        } else {
+          reject(mockParseUploadedError);
+        }
+      });
+    }),
+    copyUploadedFileToParsed: jest.fn((key) => {
+      return new Promise((resolve, reject) => {
+        if (key === "abc" || key === "ijk xyz  mno" || key === "delete") {
+          resolve();
+        } else {
+          reject(mockCopyUploadedError);
+        }
+      });
+    }),
+    deleteFile: jest.fn((key) => {
+      return new Promise((resolve, reject) => {
         if (key === "abc" || key === "ijk xyz  mno") {
           resolve();
         } else {
-          reject(new Error(PARSE_UPLOADED_FILE_ERROR));
+          reject(mockDeleteUploadedError);
         }
       });
     }),
@@ -59,6 +86,8 @@ describe("import-service/services/import.js", () => {
     });
 
     expect(parseUploadedFile).toHaveBeenCalledWith("abc");
+    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("abc");
+    expect(deleteFile).toHaveBeenCalledWith("abc");
   });
 
   test("importFileParser with object key with space", async () => {
@@ -75,28 +104,68 @@ describe("import-service/services/import.js", () => {
     });
 
     expect(parseUploadedFile).toHaveBeenCalledWith("ijk xyz  mno");
+    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("ijk xyz  mno");
+    expect(deleteFile).toHaveBeenCalledWith("ijk xyz  mno");
   });
 
-  test("importFileParser with error", async () => {
+  test("importFileParser with error at parseUploadedFile", async () => {
     const consoleErrorMock = jest.spyOn(console, "error").mockImplementation();
 
-    try {
-      await importFileParser({
-        Records: [
-          {
-            s3: {
-              object: {
-                key: "12345",
-              },
+    await importFileParser({
+      Records: [
+        {
+          s3: {
+            object: {
+              key: "12345",
             },
           },
-        ],
-      });
-    } catch (e) {
-      expect(e.message).toEqual(PARSE_UPLOADED_FILE_ERROR);
-    }
-
+        },
+      ],
+    });
     expect(parseUploadedFile).toHaveBeenCalledWith("12345");
+    expect(consoleErrorMock).toHaveBeenCalledWith(mockParseUploadedError);
+    consoleErrorMock.mockRestore();
+  });
+
+  test("importFileParser with error at copyUploadedFileToParsed", async () => {
+    const consoleErrorMock = jest.spyOn(console, "error").mockImplementation();
+
+    await importFileParser({
+      Records: [
+        {
+          s3: {
+            object: {
+              key: "copy",
+            },
+          },
+        },
+      ],
+    });
+    expect(parseUploadedFile).toHaveBeenCalledWith("copy");
+    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("copy");
+    expect(deleteFile).not.toHaveBeenCalledWith("copy");
+    expect(consoleErrorMock).toHaveBeenCalledWith(mockCopyUploadedError);
+    consoleErrorMock.mockRestore();
+  });
+
+  test("importFileParser with error at deleteFile", async () => {
+    const consoleErrorMock = jest.spyOn(console, "error").mockImplementation();
+
+    await importFileParser({
+      Records: [
+        {
+          s3: {
+            object: {
+              key: "delete",
+            },
+          },
+        },
+      ],
+    });
+    expect(parseUploadedFile).toHaveBeenCalledWith("delete");
+    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("delete");
+    expect(deleteFile).toHaveBeenCalledWith("delete");
+    expect(consoleErrorMock).toHaveBeenCalledWith(mockDeleteUploadedError);
     consoleErrorMock.mockRestore();
   });
 });

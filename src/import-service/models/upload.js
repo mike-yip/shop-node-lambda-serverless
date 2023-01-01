@@ -17,8 +17,13 @@ const getS3Instance = (() => {
   };
 })();
 
-const getUploadKey = (fileName) =>
-  `${process.env["FILE_UPLOAD_BUCKET_PREFIX"]}${fileName}`;
+const getUploadedPrefix = () => process.env["FILE_UPLOADED_PREFIX"];
+
+const getUploadedKey = (fileName) =>
+  `${getUploadedPrefix()}${fileName}`;
+
+const getParsedKey = (fileName) =>
+  `${process.env["FILE_PARSED_PREFIX"]}${fileName}`;
 
 export const getSignedUrlForUpload = async (fileName) => {
   if (!fileName) throw new Error("Name is required");
@@ -26,7 +31,7 @@ export const getSignedUrlForUpload = async (fileName) => {
   const s3 = getS3Instance();
   const params = {
     Bucket: getUploadBucketName(),
-    Key: getUploadKey(fileName),
+    Key: getUploadedKey(fileName),
   };
   return await s3.getSignedUrlPromise("putObject", params);
 };
@@ -65,4 +70,33 @@ export const parseUploadedFile = async (key) => {
       reject(e);
     }
   });
+};
+
+export const copyUploadedFileToParsed = async (key) => {
+  if (!key) throw new Error("Key is required");
+
+  const s3 = getS3Instance();
+  const idx = getUploadedPrefix().length; // prefix/filename
+  const fileName = key.substring(idx, key.length);
+
+  const params = {
+    Bucket: getUploadBucketName(),
+    CopySource: `/${getUploadBucketName()}/${key}`,
+    Key: getParsedKey(fileName),
+  };
+
+  return await s3.copyObject(params).promise();
+};
+
+export const deleteFile = async (key) => {
+  if (!key) throw new Error("Key is required");
+
+  const s3 = getS3Instance();
+
+  const params = {
+    Bucket: getUploadBucketName(),
+    Key: key,
+  };
+
+  return await s3.deleteObject(params).promise();
 };

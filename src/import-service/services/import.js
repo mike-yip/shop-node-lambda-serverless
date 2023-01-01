@@ -1,6 +1,11 @@
 "use strict";
 
-import { getSignedUrlForUpload, parseUploadedFile } from "../models/upload";
+import {
+  getSignedUrlForUpload,
+  parseUploadedFile,
+  copyUploadedFileToParsed,
+  deleteFile,
+} from "../models/upload";
 
 export const importProductsFile = async (event) => {
   const name = event.queryStringParameters.name;
@@ -14,10 +19,11 @@ export const importProductsFile = async (event) => {
 
 export const importFileParser = async (event) => {
   try {
-    const key = event.Records[0].s3.object.key.replace(/\+/g, ' ');
+    const key = event.Records[0].s3.object.key.replace(/\+/g, " ");
     await parseUploadedFile(key);
-  }
-  catch (e) {
+    await copyUploadedFileToParsed(key);
+    await deleteFile(key);
+  } catch (e) {
     console.error(e);
   }
 };

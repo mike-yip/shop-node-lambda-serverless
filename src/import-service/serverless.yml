@@ -8,7 +8,8 @@ provider:
   environment:
     FILE_UPLOAD_BUCKET_NAME: lambda-upload-mike
     FILE_UPLOAD_BUCKET_SIGNATURE_VERSION: v4
-    FILE_UPLOAD_BUCKET_PREFIX: uploaded/
+    FILE_UPLOADED_PREFIX: uploaded/
+    FILE_PARSED_PREFIX: parsed/
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -17,7 +18,10 @@ provider:
         - s3:ListBucket
         - s3:ListBucketVersions
         - s3:GetBucketLocation
-      Resource: arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/${self:provider.environment.FILE_UPLOAD_BUCKET_PREFIX}*
+        - s3:DeleteObject
+      Resource:
+        - arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/${self:provider.environment.FILE_UPLOADED_PREFIX}*
+        - arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/${self:provider.environment.FILE_PARSED_PREFIX}*
   httpApi:
     cors: true
 
@@ -50,7 +54,7 @@ functions:
           bucket: ${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}
           event: s3:ObjectCreated:*
           rules:
-            - prefix: ${self:provider.environment.FILE_UPLOAD_BUCKET_PREFIX}
+            - prefix: ${self:provider.environment.FILE_UPLOADED_PREFIX}
             - suffix: .csv
           existing: true
     middleware:

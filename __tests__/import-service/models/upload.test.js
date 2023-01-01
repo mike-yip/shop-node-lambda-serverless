@@ -23,7 +23,7 @@ describe("import-service/models/import.js, getSignedUrlForUpload", () => {
       if (
         ops === "putObject" &&
         params.Bucket === process.env["FILE_UPLOAD_BUCKET_NAME"] &&
-        params.Key === `${process.env["FILE_UPLOAD_BUCKET_PREFIX"]}${fileName}`
+        params.Key === `${process.env["FILE_UPLOADED_PREFIX"]}${fileName}`
       )
         ret = "xyz";
 
