@@ -3,7 +3,7 @@
 import {
   getSignedUrlForUpload,
   parseUploadedFile,
-  copyUploadedFileToParsed,
+  copyFileToParsed,
   deleteFile,
 } from "../models/upload";
 
@@ -21,7 +21,7 @@ export const importFileParser = async (event) => {
   try {
     const key = event.Records[0].s3.object.key.replace(/\+/g, " ");
     await parseUploadedFile(key);
-    await copyUploadedFileToParsed(key);
+    await copyFileToParsed(key);
     await deleteFile(key);
   } catch (e) {
     console.error(e);

@@ -72,11 +72,11 @@ export const parseUploadedFile = async (key) => {
   });
 };
 
-export const copyUploadedFileToParsed = async (key) => {
+export const copyFileToParsed = async (key) => {
   if (!key) throw new Error("Key is required");
 
   const s3 = getS3Instance();
-  const idx = getUploadedPrefix().length; // prefix/filename
+  const idx = key.lastIndexOf("/") + 1; // take the file name part
   const fileName = key.substring(idx, key.length);
 
   const params = {

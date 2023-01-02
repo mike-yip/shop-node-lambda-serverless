@@ -3,6 +3,8 @@
 import {
   getSignedUrlForUpload,
   parseUploadedFile,
+  copyFileToParsed,
+  deleteFile,
 } from "../../../src/import-service/models/upload";
 import AWSMock from "aws-sdk-mock";
 import AWS from "aws-sdk";
@@ -42,6 +44,95 @@ describe("import-service/models/import.js, getSignedUrlForUpload", () => {
     await expect(getSignedUrlForUpload()).rejects.toThrow(invalidNameError);
     await expect(getSignedUrlForUpload(null)).rejects.toThrow(invalidNameError);
     await expect(getSignedUrlForUpload("")).rejects.toThrow(invalidNameError);
+  });
+
+  test("copyFileToParsed with key passed in", async () => {
+    const fileName = "abc";
+    const sourceKey = `${process.env["FILE_UPLOADED_PREFIX"]}/${fileName}`;
+    const bucketName = process.env["FILE_UPLOAD_BUCKET_NAME"];
+
+    AWSMock.setSDKInstance(AWS);
+    AWSMock.mock("S3", "copyObject", (params, callback) => {
+      let ret = null;
+
+      if (
+        params.Bucket === bucketName &&
+        params.CopySource === `/${bucketName}/${sourceKey}` &&
+        params.Key === `${process.env["FILE_PARSED_PREFIX"]}${fileName}`
+      )
+        ret = "xyz";
+
+      callback(null, ret);
+    });
+
+    const response = await copyFileToParsed(sourceKey);
+    expect(response).toEqual("xyz");
+
+    AWSMock.restore("S3", "copyObject");
+  });
+
+  test("copyFileToParsed with key at root passed in", async () => {
+    const fileName = "abc";
+    const sourceKey = `${fileName}`;
+    const bucketName = process.env["FILE_UPLOAD_BUCKET_NAME"];
+
+    AWSMock.setSDKInstance(AWS);
+    AWSMock.mock("S3", "copyObject", (params, callback) => {
+      let ret = null;
+
+      if (
+        params.Bucket === bucketName &&
+        params.CopySource === `/${bucketName}/${sourceKey}` &&
+        params.Key === `${process.env["FILE_PARSED_PREFIX"]}${fileName}`
+      )
+        ret = "xyz";
+
+      callback(null, ret);
+    });
+
+    const response = await copyFileToParsed(sourceKey);
+    expect(response).toEqual("xyz");
+
+    AWSMock.restore("S3", "copyObject");
+  });
+
+  test("copyFileToParsed with invalid name passed in", async () => {
+    const invalidKeyError = new Error("Key is required");
+
+    await expect(copyFileToParsed()).rejects.toThrow(invalidKeyError);
+    await expect(copyFileToParsed(null)).rejects.toThrow(invalidKeyError);
+    await expect(copyFileToParsed("")).rejects.toThrow(invalidKeyError);
+  });
+
+  test("deleteFile with key passed in", async () => {
+    const key = `${process.env["FILE_UPLOADED_PREFIX"]}/abc`;
+    const bucketName = process.env["FILE_UPLOAD_BUCKET_NAME"];
+
+    AWSMock.setSDKInstance(AWS);
+    AWSMock.mock("S3", "deleteObject", (params, callback) => {
+      let ret = null;
+
+      if (
+        params.Bucket === bucketName &&
+        params.Key === key
+      )
+        ret = "xyz";
+
+      callback(null, ret);
+    });
+
+    const response = await deleteFile(key);
+    expect(response).toEqual("xyz");
+
+    AWSMock.restore("S3", "deleteObject");
+  });
+
+  test("deleteFile with invalid name passed in", async () => {
+    const invalidKeyError = new Error("Key is required");
+
+    await expect(deleteFile()).rejects.toThrow(invalidKeyError);
+    await expect(deleteFile(null)).rejects.toThrow(invalidKeyError);
+    await expect(deleteFile("")).rejects.toThrow(invalidKeyError);
   });
 });
 

@@ -3,7 +3,7 @@
 import {
   getSignedUrlForUpload,
   parseUploadedFile,
-  copyUploadedFileToParsed,
+  copyFileToParsed,
   deleteFile,
 } from "../../../src/import-service/models/upload";
 import {
@@ -36,7 +36,7 @@ jest.mock("../../../src/import-service/models/upload", () => {
         }
       });
     }),
-    copyUploadedFileToParsed: jest.fn((key) => {
+    copyFileToParsed: jest.fn((key) => {
       return new Promise((resolve, reject) => {
         if (key === "abc" || key === "ijk xyz  mno" || key === "delete") {
           resolve();
@@ -86,7 +86,7 @@ describe("import-service/services/import.js", () => {
     });
 
     expect(parseUploadedFile).toHaveBeenCalledWith("abc");
-    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("abc");
+    expect(copyFileToParsed).toHaveBeenCalledWith("abc");
     expect(deleteFile).toHaveBeenCalledWith("abc");
   });
 
@@ -104,7 +104,7 @@ describe("import-service/services/import.js", () => {
     });
 
     expect(parseUploadedFile).toHaveBeenCalledWith("ijk xyz  mno");
-    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("ijk xyz  mno");
+    expect(copyFileToParsed).toHaveBeenCalledWith("ijk xyz  mno");
     expect(deleteFile).toHaveBeenCalledWith("ijk xyz  mno");
   });
 
@@ -127,7 +127,7 @@ describe("import-service/services/import.js", () => {
     consoleErrorMock.mockRestore();
   });
 
-  test("importFileParser with error at copyUploadedFileToParsed", async () => {
+  test("importFileParser with error at copyFileToParsed", async () => {
     const consoleErrorMock = jest.spyOn(console, "error").mockImplementation();
 
     await importFileParser({
@@ -142,7 +142,7 @@ describe("import-service/services/import.js", () => {
       ],
     });
     expect(parseUploadedFile).toHaveBeenCalledWith("copy");
-    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("copy");
+    expect(copyFileToParsed).toHaveBeenCalledWith("copy");
     expect(deleteFile).not.toHaveBeenCalledWith("copy");
     expect(consoleErrorMock).toHaveBeenCalledWith(mockCopyUploadedError);
     consoleErrorMock.mockRestore();
@@ -163,7 +163,7 @@ describe("import-service/services/import.js", () => {
       ],
     });
     expect(parseUploadedFile).toHaveBeenCalledWith("delete");
-    expect(copyUploadedFileToParsed).toHaveBeenCalledWith("delete");
+    expect(copyFileToParsed).toHaveBeenCalledWith("delete");
     expect(deleteFile).toHaveBeenCalledWith("delete");
     expect(consoleErrorMock).toHaveBeenCalledWith(mockDeleteUploadedError);
     consoleErrorMock.mockRestore();
