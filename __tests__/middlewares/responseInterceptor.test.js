@@ -1,6 +1,6 @@
 "use strict";
 
-import { errorHandler } from "../../src/utils/responseInterceptor";
+import { errorHandler } from "../../src/middlewares/responseInterceptor";
 
 describe("utils/responseInterceptor.js", () => {
   test("errorHandler", async () => {

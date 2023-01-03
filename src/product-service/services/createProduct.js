@@ -1,6 +1,6 @@
 "use strict";
 
-import { createProduct } from "../utils/product";
+import { createProduct } from "../models/product";
 
 const isValidProduct = (product) => {
   if (!product?.title) return false;

@@ -1,9 +1,9 @@
 "use strict";
 
-import { getProducts } from "../../src/utils/product";
-import { getProductsList } from "../../src/services/productsList";
+import { getProducts } from "../../../src/product-service/models/product";
+import { getProductsList } from "../../../src/product-service/services/productsList";
 
-jest.mock("../../src/utils/product", () => {
+jest.mock("../../../src/product-service/models/product", () => {
   return {
     getProducts: jest.fn(() => {
       return Promise.resolve(["abc", "xyz"]);

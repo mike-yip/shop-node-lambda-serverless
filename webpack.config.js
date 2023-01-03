@@ -25,7 +25,7 @@ module.exports = {
                 test: /\.js$/,
                 loader: "babel-loader",
                 include: __dirname,
-                exclude: [/node_modules/, /\.middleware/, /jest\.config\.js$/, /\.jest/]
+                exclude: [/node_modules/, /\.middleware/, /jest\.config\.js$/, /\.jest/, /\.test\.js$/]
             }
         ]
     }

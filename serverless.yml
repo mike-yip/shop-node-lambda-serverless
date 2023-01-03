@@ -34,25 +34,25 @@ custom:
         includeModules: true # enable auto-packing of external modules
     middleware:
       pre: 
-        - src/utils/requestInterceptor.logRequest
+        - src/middlewares/requestInterceptor.logRequest
       pos:
-        - catch: src/utils/responseInterceptor.errorHandler
+        - catch: src/middlewares/responseInterceptor.errorHandler
 
 functions:
   getProductsList:
-    handler: src/services/productsList.getProductsList
+    handler: src/product-service/services/productsList.getProductsList
     events:
       - httpApi:
           path: /products
           method: get
   getProductsById:
-    handler: src/services/productsById.getProductsById
+    handler: src/product-service/services/productsById.getProductsById
     events:
       - httpApi:
           path: /products/{productId}
           method: get
   createProduct:
-    handler: src/services/createProduct.createProductApi
+    handler: src/product-service/services/createProduct.createProductApi
     events:
       - httpApi:
           path: /products
