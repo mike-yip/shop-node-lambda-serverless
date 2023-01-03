@@ -36,8 +36,8 @@ custom:
   middleware:
     pre: 
       - ../middlewares/requestInterceptor.logRequest
-    pos:
-      - catch: ../middlewares/responseInterceptor.errorHandler
+  sqsQueueName: catalogItemsQueue
+  sqsQueueArn: arn:aws:sqs:${aws:region}:${aws:accountId}:${self:custom.sqsQueueName}
 
 functions:
   getProductsList:
@@ -46,15 +46,42 @@ functions:
       - httpApi:
           path: /products
           method: get
+    middleware:
+      pos:
+        - catch: ../middlewares/responseInterceptor.errorHandler
   getProductsById:
     handler: services/productsById.getProductsById
     events:
       - httpApi:
           path: /products/{productId}
           method: get
+    middleware:
+      pos:
+        - catch: ../middlewares/responseInterceptor.errorHandler
   createProduct:
     handler: services/createProduct.createProductApi
     events:
       - httpApi:
           path: /products
           method: post
+    middleware:
+      pos:
+        - catch: ../middlewares/responseInterceptor.errorHandler
+  catalogBatchProcess:
+    handler: services/catalogBatchProcess.catalogBatchProcessApi
+    events:
+      - sqs: 
+          arn: ${self:custom.sqsQueueArn}
+          batchSize: 5
+
+resources:
+  Resources:
+    MyCatalogItemsQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ${self:custom.sqsQueueName}
+  Outputs:
+    CatalogItemsQueueUrl:
+      Value: !Ref MyCatalogItemsQueue
+    CatalogItemsQueueArn:
+      Value: ${self:custom.sqsQueueArn}

@@ -19,11 +19,31 @@ const getS3Instance = (() => {
 
 const getUploadedPrefix = () => process.env["FILE_UPLOADED_PREFIX"];
 
-const getUploadedKey = (fileName) =>
-  `${getUploadedPrefix()}${fileName}`;
+const getUploadedKey = (fileName) => `${getUploadedPrefix()}${fileName}`;
 
 const getParsedKey = (fileName) =>
   `${process.env["FILE_PARSED_PREFIX"]}${fileName}`;
+
+const getSqsInstance = (() => {
+  let sqs = null;
+  return () => {
+    if (!sqs) sqs = new AWS.SQS();
+    return sqs;
+  };
+})();
+
+const getCreateProductSqsUrl = () => process.env["CATALOG_ITEMS_QUEUE_URL"];
+
+const sendCreateProductSqsMessage = async (product) => {
+  const sqs = getSqsInstance();
+  const queueUrl = getCreateProductSqsUrl();
+  const params = {
+    QueueUrl: queueUrl,
+    MessageBody: JSON.stringify(product),
+  };
+
+  await sqs.sendMessage(params).promise();
+};
 
 export const getSignedUrlForUpload = async (fileName) => {
   if (!fileName) throw new Error("Name is required");
@@ -45,8 +65,6 @@ export const parseUploadedFile = async (key) => {
     Key: key,
   };
 
-  const results = [];
-
   return new Promise((resolve, reject) => {
     try {
       s3.getObject(params)
@@ -57,11 +75,13 @@ export const parseUploadedFile = async (key) => {
         })
         .pipe(csv())
         .on("data", (data) => {
-          results.push(data);
-          console.log(data);
+          sendCreateProductSqsMessage(data).catch((e) => {
+            // TODO: error handling?
+            console.error(e);
+          });
         })
         .on("end", () => {
-          resolve(results);
+          resolve();
         })
         .on("error", (e) => {
           reject(e);
