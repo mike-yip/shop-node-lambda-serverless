@@ -2,20 +2,11 @@
 
 import { createProduct } from "../models/product";
 
-const isValidProduct = (product) => {
-  if (!product?.title) return false;
-
-  if (!Number.isInteger(product?.price)) return false;
-
-  return true;
-};
-
 export const createProductApi = async (event) => {
-  const productToAdd = JSON.parse(event?.body || "{}");
+  const productToAdd = JSON.parse(event.body);
+  const { created, message, product: productAdded } = await createProduct(productToAdd);
 
-  if (isValidProduct(productToAdd)) {
-    const productAdded = await createProduct(productToAdd);
-
+  if (created) {
     return {
       statusCode: 200,
       body: JSON.stringify(productAdded),
@@ -24,7 +15,7 @@ export const createProductApi = async (event) => {
     return {
       statusCode: 400,
       body: JSON.stringify({
-        message: "Invalid format",
+        message: message,
       }),
     };
   }

@@ -343,9 +343,12 @@ describe("utils/product.js", () => {
     AWSMock.setSDKInstance(AWS);
     AWSMock.mock("DynamoDB.DocumentClient", "transactWrite", transactWriteSpy);
 
-    const product = await createProduct(productToAdd);
+    const response = await createProduct(productToAdd);
     const uuid = uuidv4();
-    expect(product).toEqual({ ...productToAdd, id: uuid });
+    expect(response).toEqual({
+      created: true,
+      product: { ...productToAdd, id: uuid },
+    });
     expect(transactWriteSpy.mock.calls[0][0]).toEqual({
       TransactItems: [
         {
@@ -368,44 +371,114 @@ describe("utils/product.js", () => {
     AWSMock.restore("DynamoDB.DocumentClient", "transactWrite");
   });
 
-  test("createProduct failed", async () => {
-    const errorMessage = "Cannot create product";
-    const title = "title";
+  test("createProduct undefined product", async () => {
+    const transactWriteSpy = jest.fn((params, callback) => {
+      callback(null, {});
+    });
+    
+    AWSMock.setSDKInstance(AWS);
+    AWSMock.mock("DynamoDB.DocumentClient", "transactWrite", transactWriteSpy);
+
+    const response = await createProduct();
+
+    expect(response).toEqual({
+      created: false,
+      message: "Invalid format",
+    });
+
+    expect(transactWriteSpy).not.toHaveBeenCalled();
+
+    AWSMock.restore("DynamoDB.DocumentClient", "transactWrite");
+  });
+
+  test("createProduct invalid title", async () => {
+    const title = null;
     const description = "description";
     const price = 123;
     const count = 456;
     const transactWriteSpy = jest.fn((params, callback) => {
-      callback(new Error(errorMessage));
+      callback(null, {});
     });
     const productToAdd = { title, description, price, count };
 
     AWSMock.setSDKInstance(AWS);
     AWSMock.mock("DynamoDB.DocumentClient", "transactWrite", transactWriteSpy);
 
-    try {
-      await createProduct(productToAdd);
-    } catch (e) {
-      const uuid = uuidv4();
-      expect(e.message).toEqual(errorMessage);
-      expect(transactWriteSpy.mock.calls[0][0]).toEqual({
-        TransactItems: [
-          {
-            Put: {
-              TableName: process.env["PRODUCTS_TABLE_NAME"],
-              Item: { id: uuid, title, description, price },
-              ConditionExpression: "attribute_not_exists(id)",
-            },
-          },
-          {
-            Put: {
-              TableName: process.env["STOCKS_TABLE_NAME"],
-              Item: { product_id: uuid, count },
-              ConditionExpression: "attribute_not_exists(product_id)",
-            },
-          },
-        ],
+    const response = await createProduct(productToAdd);
+
+    expect(response).toEqual({
+      created: false,
+      message: "Invalid format",
+    });
+
+    expect(transactWriteSpy).not.toHaveBeenCalled();
+
+    AWSMock.restore("DynamoDB.DocumentClient", "transactWrite");
+  });
+
+  test("createProduct invalid price", async () => {
+    const title = "title";
+    const description = "description";
+    const count = 456;
+    const pricesToTest = [undefined, null, "", "123"];
+    const transactWriteSpy = jest.fn((params, callback) => {
+      callback(null, {});
+    });
+    const productToAdd = { title, description, count };
+
+    AWSMock.setSDKInstance(AWS);
+    AWSMock.mock("DynamoDB.DocumentClient", "transactWrite", transactWriteSpy);
+
+    const promises = pricesToTest.map(p => createProduct({ ...productToAdd, price: p }));
+    const responses = await Promise.all(promises);
+
+    for (const response of responses) {
+      expect(response).toEqual({
+        created: false,
+        message: "Invalid format",
       });
     }
+    expect(transactWriteSpy).not.toHaveBeenCalled();
+
+    AWSMock.restore("DynamoDB.DocumentClient", "transactWrite");
+  });
+
+  test("createProduct failed", async () => {
+    const mockCannotCreateError = new Error("Cannot create product");
+    const title = "title";
+    const description = "description";
+    const price = 123;
+    const count = 456;
+    const transactWriteSpy = jest.fn((params, callback) => {
+      callback(mockCannotCreateError);
+    });
+    const productToAdd = { title, description, price, count };
+
+    AWSMock.setSDKInstance(AWS);
+    AWSMock.mock("DynamoDB.DocumentClient", "transactWrite", transactWriteSpy);
+
+    await expect(createProduct(productToAdd)).rejects.toThrow(
+      mockCannotCreateError
+    );
+    const uuid = uuidv4();
+    expect(transactWriteSpy.mock.calls[0][0]).toEqual({
+      TransactItems: [
+        {
+          Put: {
+            TableName: process.env["PRODUCTS_TABLE_NAME"],
+            Item: { id: uuid, title, description, price },
+            ConditionExpression: "attribute_not_exists(id)",
+          },
+        },
+        {
+          Put: {
+            TableName: process.env["STOCKS_TABLE_NAME"],
+            Item: { product_id: uuid, count },
+            ConditionExpression: "attribute_not_exists(product_id)",
+          },
+        },
+      ],
+    });
 
     AWSMock.restore("DynamoDB.DocumentClient", "transactWrite");
   });

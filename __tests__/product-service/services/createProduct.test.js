@@ -3,10 +3,15 @@
 import { createProduct } from "../../../src/product-service/models/product";
 import { createProductApi } from "../../../src/product-service/services/createProduct";
 
+const mockErrorMessage = "Invalid format";
+
 jest.mock("../../../src/product-service/models/product", () => {
   return {
     createProduct: jest.fn((obj) => {
-      return Promise.resolve(obj);
+      if (obj && obj.title && obj.price !== undefined)
+        return Promise.resolve({ created: true, product: obj });
+      else
+        return Promise.resolve({ created: false, message: mockErrorMessage });
     }),
   };
 });
@@ -29,7 +34,7 @@ describe("services/createProduct.js", () => {
     expect(response).toEqual({
       statusCode: 400,
       body: JSON.stringify({
-        message: "Invalid format",
+        message: mockErrorMessage,
       }),
     });
   });
@@ -41,18 +46,7 @@ describe("services/createProduct.js", () => {
     expect(response).toEqual({
       statusCode: 400,
       body: JSON.stringify({
-        message: "Invalid format",
-      }),
-    });
-  });
-
-  test("createProductApi with missing product", async () => {
-    const response = await createProductApi();
-
-    expect(response).toEqual({
-      statusCode: 400,
-      body: JSON.stringify({
-        message: "Invalid format",
+        message: mockErrorMessage,
       }),
     });
   });

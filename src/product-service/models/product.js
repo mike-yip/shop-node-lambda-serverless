@@ -15,6 +15,14 @@ const getDynamoDBDocumentClient = (() => {
   };
 })();
 
+const isValidProduct = (product) => {
+  if (!product?.title) return false;
+
+  if (!Number.isInteger(product?.price)) return false;
+
+  return true;
+};
+
 export const getProducts = async () => {
   const docClient = getDynamoDBDocumentClient();
 
@@ -89,6 +97,12 @@ export const getProductById = async (productId) => {
 };
 
 export const createProduct = async (product) => {
+  if (!isValidProduct(product))
+    return {
+      created: false,
+      message: "Invalid format",
+    };
+
   const uuid = uuidv4();
   const { title, description, price, count } = product;
   const docClient = getDynamoDBDocumentClient();
@@ -122,5 +136,5 @@ export const createProduct = async (product) => {
 
   await docClient.transactWrite(params).promise();
 
-  return { ...product, count: count, id: uuid };
+  return { created: true, product: { ...product, count: count, id: uuid } };
 };

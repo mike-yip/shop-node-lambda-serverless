@@ -30,15 +30,15 @@ plugins:
   - serverless-webpack
 
 custom:
-    webpack:
-      webpackConfig: ../../webpack.config.js
-      includeModules:
-        packagePath: '../../package.json'
-    middleware:
-      pre: 
-        - ../middlewares/requestInterceptor.logRequest
-      pos:
-        - catch: ../middlewares/responseInterceptor.errorHandler
+  webpack:
+    webpackConfig: ../../webpack.config.js
+    includeModules:
+      packagePath: '../../package.json'
+  middleware:
+    pre: 
+      - ../middlewares/requestInterceptor.logRequest
+    pos:
+      - catch: ../middlewares/responseInterceptor.errorHandler
 
 functions:
   importProductsFile:
