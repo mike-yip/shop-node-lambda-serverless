@@ -31,9 +31,9 @@ plugins:
 
 custom:
     webpack:
-        webpackConfig: ../../webpack.config.js
-        includeModules:
-          packagePath: '../../package.json'
+      webpackConfig: ../../webpack.config.js
+      includeModules:
+        packagePath: '../../package.json'
     middleware:
       pre: 
         - ../middlewares/requestInterceptor.logRequest

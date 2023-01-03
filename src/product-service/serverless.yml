@@ -30,29 +30,30 @@ plugins:
 
 custom:
     webpack:
-        webpackConfig: ./webpack.config.js
-        includeModules: true # enable auto-packing of external modules
+      webpackConfig: ../../webpack.config.js
+      includeModules:
+        packagePath: '../../package.json'
     middleware:
       pre: 
-        - src/middlewares/requestInterceptor.logRequest
+        - ../middlewares/requestInterceptor.logRequest
       pos:
-        - catch: src/middlewares/responseInterceptor.errorHandler
+        - catch: ../middlewares/responseInterceptor.errorHandler
 
 functions:
   getProductsList:
-    handler: src/product-service/services/productsList.getProductsList
+    handler: services/productsList.getProductsList
     events:
       - httpApi:
           path: /products
           method: get
   getProductsById:
-    handler: src/product-service/services/productsById.getProductsById
+    handler: services/productsById.getProductsById
     events:
       - httpApi:
           path: /products/{productId}
           method: get
   createProduct:
-    handler: src/product-service/services/createProduct.createProductApi
+    handler: services/createProduct.createProductApi
     events:
       - httpApi:
           path: /products
