@@ -96,7 +96,19 @@ resources:
       Properties:
         Endpoint: mike_yip@epam.com
         Protocol: email
-        TopicArn: !Ref MyCreateProductTopic
+        TopicArn: ${self:provider.environment.CREATE_PRODUCT_TOPIC_ARN}
+        FilterPolicy:
+            random:
+              - 0
+    MyCreateProductTopicSubscription2:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: epam-js-competency-center@mailinator.com
+        Protocol: email
+        TopicArn: ${self:provider.environment.CREATE_PRODUCT_TOPIC_ARN}
+        FilterPolicy:
+            random:
+              - 1
   Outputs:
     CatalogItemsQueueUrl:
       Value: !Ref MyCatalogItemsQueue

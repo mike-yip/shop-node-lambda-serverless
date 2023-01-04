@@ -153,6 +153,12 @@ export const sendCreateProductSnsMessage = async (message) => {
   var params = {
     Message: message,
     TopicArn: getCreateProductTopicArn(),
+    MessageAttributes: {
+      random: {
+        DataType: "Number",
+        StringValue: "" + Math.floor(Math.random() * 2), // 0 or 1
+      },
+    },
   };
 
   const sns = getSnsInstance();
