@@ -7,11 +7,21 @@ const getProductsTableName = () => process.env["PRODUCTS_TABLE_NAME"];
 
 const getStocksTableName = () => process.env["STOCKS_TABLE_NAME"];
 
+const getCreateProductTopicArn = () => process.env["CREATE_PRODUCT_TOPIC_ARN"];
+
 const getDynamoDBDocumentClient = (() => {
   let docClient = null;
   return () => {
     if (!docClient) docClient = new AWS.DynamoDB.DocumentClient();
     return docClient;
+  };
+})();
+
+const getSnsInstance = (() => {
+  let sns = null;
+  return () => {
+    if (!sns) sns = new AWS.SNS();
+    return sns;
   };
 })();
 
@@ -137,4 +147,15 @@ export const createProduct = async (product) => {
   await docClient.transactWrite(params).promise();
 
   return { created: true, product: { ...product, count: count, id: uuid } };
+};
+
+export const sendCreateProductSnsMessage = async (message) => {
+  var params = {
+    Message: message,
+    TopicArn: getCreateProductTopicArn(),
+  };
+
+  const sns = getSnsInstance();
+
+  return await sns.publish(params).promise();
 };

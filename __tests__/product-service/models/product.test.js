@@ -4,6 +4,7 @@ import {
   getProducts,
   getProductById,
   createProduct,
+  sendCreateProductSnsMessage,
 } from "../../../src/product-service/models/product";
 import AWSMock from "aws-sdk-mock";
 import AWS from "aws-sdk";
@@ -17,7 +18,7 @@ jest.mock("uuid", () => {
   };
 });
 
-describe("utils/product.js", () => {
+describe("product-service/models/product.js", () => {
   const mockProducts = [
     {
       description: "Short Product Description1",
@@ -375,7 +376,7 @@ describe("utils/product.js", () => {
     const transactWriteSpy = jest.fn((params, callback) => {
       callback(null, {});
     });
-    
+
     AWSMock.setSDKInstance(AWS);
     AWSMock.mock("DynamoDB.DocumentClient", "transactWrite", transactWriteSpy);
 
@@ -429,7 +430,9 @@ describe("utils/product.js", () => {
     AWSMock.setSDKInstance(AWS);
     AWSMock.mock("DynamoDB.DocumentClient", "transactWrite", transactWriteSpy);
 
-    const promises = pricesToTest.map(p => createProduct({ ...productToAdd, price: p }));
+    const promises = pricesToTest.map((p) =>
+      createProduct({ ...productToAdd, price: p })
+    );
     const responses = await Promise.all(promises);
 
     for (const response of responses) {
@@ -481,5 +484,21 @@ describe("utils/product.js", () => {
     });
 
     AWSMock.restore("DynamoDB.DocumentClient", "transactWrite");
+  });
+
+  test("sendCreateProductSnsMessage", async () => {
+    const mockMessage = "xyz";
+    const mockTopicArn = process.env["CREATE_PRODUCT_TOPIC_ARN"];
+
+    AWSMock.setSDKInstance(AWS);
+    AWSMock.mock("SNS", "publish", (params, callback) => {
+      if (params.Message === mockMessage && params.TopicArn === mockTopicArn)
+        callback(null, true);
+      else callback(new Error("Unexpected test"));
+    });
+
+    await expect(sendCreateProductSnsMessage(mockMessage)).resolves.toBe(true);
+
+    AWSMock.restore("SNS", "publish");
   });
 });

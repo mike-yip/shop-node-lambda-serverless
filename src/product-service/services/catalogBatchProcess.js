@@ -1,29 +1,5 @@
 "use strict";
-import { createProduct } from "../models/product";
-import AWS from "aws-sdk";
-
-const getCreateProductTopicArn = () => process.env["CREATE_PRODUCT_TOPIC_ARN"];
-
-const getSnsInstance = (() => {
-  let sns = null;
-  return () => {
-    if (!sns) sns = new AWS.SNS();
-    return sns;
-  };
-})();
-
-const sendSnsMessage = async (productsCreated, productsFailed) => {
-  const message = `Created: ${JSON.stringify(productsCreated)}\n\nFailed: ${JSON.stringify(productsFailed)}`;
-
-  var params = {
-    Message: message,
-    TopicArn: getCreateProductTopicArn(),
-  };
-
-  const sns = getSnsInstance();
-
-  await sns.publish(params).promise();
-};
+import { createProduct, sendCreateProductSnsMessage } from "../models/product";
 
 export const catalogBatchProcessApi = async (event) => {
   const productsCreated = []; // [product in JSON, ...]
@@ -33,7 +9,7 @@ export const catalogBatchProcessApi = async (event) => {
     productsFailed.push({ json: productJson, message });
   };
 
-  for (const { body } of event?.Records || []) {
+  for (const { body } of event.Records) {
     try {
       const product = JSON.parse(body);
       const productToAdd = {
@@ -54,5 +30,7 @@ export const catalogBatchProcessApi = async (event) => {
     }
   }
 
-  await sendSnsMessage(productsCreated, productsFailed);
+  const message = `Created: ${JSON.stringify(productsCreated)}\n\nFailed: ${JSON.stringify(productsFailed)}`;
+
+  await sendCreateProductSnsMessage(message);
 };
