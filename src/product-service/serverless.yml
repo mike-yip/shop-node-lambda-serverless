@@ -8,6 +8,7 @@ provider:
   environment:
     PRODUCTS_TABLE_NAME: products
     STOCKS_TABLE_NAME: stocks
+    CREATE_PRODUCT_TOPIC_ARN: !Ref MyCreateProductTopic
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -21,6 +22,11 @@ provider:
       Resource:
         - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.PRODUCTS_TABLE_NAME}
         - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.STOCKS_TABLE_NAME}
+    - Effect: Allow
+      Action:
+        - sns:Publish
+      Resource:
+        - ${self:provider.environment.CREATE_PRODUCT_TOPIC_ARN}
   httpApi:
     cors: true
 
@@ -80,6 +86,17 @@ resources:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: ${self:custom.sqsQueueName}
+    MyCreateProductTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: 'Create Product Topic'
+        TopicName: createProductTopic
+    MyCreateProductTopicSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: mike_yip@epam.com
+        Protocol: email
+        TopicArn: !Ref MyCreateProductTopic
   Outputs:
     CatalogItemsQueueUrl:
       Value: !Ref MyCatalogItemsQueue
