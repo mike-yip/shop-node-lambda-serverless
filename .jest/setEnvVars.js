@@ -4,3 +4,4 @@ process.env.FILE_UPLOAD_BUCKET_NAME = "lambda-upload-mike";
 process.env.FILE_UPLOAD_BUCKET_SIGNATURE_VERSION = "v4";
 process.env.FILE_UPLOADED_PREFIX = "uploaded/";
 process.env.FILE_PARSED_PREFIX = "parsed/";
+process.env.CREATE_PRODUCT_TOPIC_ARN = "createProductTopicArn";

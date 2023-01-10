@@ -10,6 +10,7 @@ provider:
     FILE_UPLOAD_BUCKET_SIGNATURE_VERSION: v4
     FILE_UPLOADED_PREFIX: uploaded/
     FILE_PARSED_PREFIX: parsed/
+    CATALOG_ITEMS_QUEUE_URL: ${cf:shop-node-lambda-serverless-${sls:stage}.CatalogItemsQueueUrl}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -22,6 +23,11 @@ provider:
       Resource:
         - arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/${self:provider.environment.FILE_UPLOADED_PREFIX}*
         - arn:aws:s3:::${self:provider.environment.FILE_UPLOAD_BUCKET_NAME}/${self:provider.environment.FILE_PARSED_PREFIX}*
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource:
+        - ${cf:shop-node-lambda-serverless-${sls:stage}.CatalogItemsQueueArn}
   httpApi:
     cors: true
 
@@ -30,15 +36,13 @@ plugins:
   - serverless-webpack
 
 custom:
-    webpack:
-        webpackConfig: ../../webpack.config.js
-        includeModules:
-          packagePath: '../../package.json'
-    middleware:
-      pre: 
-        - ../middlewares/requestInterceptor.logRequest
-      pos:
-        - catch: ../middlewares/responseInterceptor.errorHandler
+  webpack:
+    webpackConfig: ../../webpack.config.js
+    includeModules:
+      packagePath: '../../package.json'
+  middleware:
+    pre: 
+      - ../middlewares/requestInterceptor.logRequest
 
 functions:
   importProductsFile:
@@ -47,6 +51,9 @@ functions:
       - httpApi:
           path: /import
           method: get
+    middleware:
+      pos:
+        - catch: ../middlewares/responseInterceptor.errorHandler
   importFileParser:
     handler: services/import.importFileParser
     events:
@@ -57,6 +64,4 @@ functions:
             - prefix: ${self:provider.environment.FILE_UPLOADED_PREFIX}
             - suffix: .csv
           existing: true
-    middleware:
-      pre: 
-        - ../middlewares/requestInterceptor.logRequest
+          
