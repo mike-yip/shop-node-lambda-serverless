@@ -34,8 +34,6 @@ provider:
       customAuthorizer:
         type: request
         functionArn: ${cf:authorization-service-${sls:stage}.BasicAuthorizerLambdaArn}
-  logs:
-    restApi: true
 
 plugins:
   - serverless-middleware
