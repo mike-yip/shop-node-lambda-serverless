@@ -1,0 +1,30 @@
+service: authorization-service
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-west-2
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-middleware
+  - serverless-webpack
+
+custom:
+  webpack:
+    webpackConfig: ../../webpack.config.js
+    includeModules:
+      packagePath: '../../package.json'
+  middleware:
+    pre: 
+      - ../middlewares/requestInterceptor.logRequest
+
+functions:
+  basicAuthorizer:
+    handler: authorization.basicAuthorizer
+
+resources:
+  Outputs:
+    BasicAuthorizerLambdaArn:
+      Value: !GetAtt BasicAuthorizerLambdaFunction.Arn

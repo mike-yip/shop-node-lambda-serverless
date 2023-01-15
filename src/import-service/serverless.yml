@@ -30,6 +30,10 @@ provider:
         - ${cf:shop-node-lambda-serverless-${sls:stage}.CatalogItemsQueueArn}
   httpApi:
     cors: true
+    authorizers:
+      customAuthorizer:
+        type: request
+        functionArn: ${cf:authorization-service-${sls:stage}.BasicAuthorizerLambdaArn}
 
 plugins:
   - serverless-middleware
@@ -51,6 +55,8 @@ functions:
       - httpApi:
           path: /import
           method: get
+          authorizer:
+            name: customAuthorizer
     middleware:
       pos:
         - catch: ../middlewares/responseInterceptor.errorHandler
@@ -64,4 +70,3 @@ functions:
             - prefix: ${self:provider.environment.FILE_UPLOADED_PREFIX}
             - suffix: .csv
           existing: true
-          
